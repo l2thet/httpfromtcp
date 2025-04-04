@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"strings"
 )
@@ -15,9 +16,28 @@ func main() {
 	}
 	defer file.Close()
 
-	lines := getLinesChannel(file)
-	for line := range lines {
-		fmt.Printf("read: %s\n", line)
+	listener, err := net.Listen("tcp", ":42069")
+	if err != nil {
+		panic(err)
+	}
+	defer listener.Close()
+
+	for {
+		con, err := listener.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection:", err)
+			continue
+		}
+		lines := getLinesChannel(con)
+		for line := range lines {
+			fmt.Printf("%s\n", line)
+			// _, err := con.Write([]byte(line))
+			// if err != nil {
+			// 	fmt.Println("Error writing to connection:", err)
+			// }
+		}
+		con.Close()
+		fmt.Println("Connection closed")
 	}
 }
 
