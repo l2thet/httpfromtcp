@@ -6,6 +6,8 @@ import (
 	"net"
 	"os"
 	"strings"
+
+	"github.com/l2thet/httpfromtcp/internal/request"
 )
 
 func main() {
@@ -28,14 +30,16 @@ func main() {
 			fmt.Println("Error accepting connection:", err)
 			continue
 		}
-		lines := getLinesChannel(con)
-		for line := range lines {
-			fmt.Printf("%s\n", line)
-			// _, err := con.Write([]byte(line))
-			// if err != nil {
-			// 	fmt.Println("Error writing to connection:", err)
-			// }
+		httpData, err := request.RequestFromReader(con)
+		if err != nil {
+			fmt.Println("Error reading request:", err)
 		}
+
+		fmt.Println("Request line:")
+		fmt.Printf("- Method: %s\n", httpData.RequestLine.Method)
+		fmt.Printf("- Target: %s\n", httpData.RequestLine.RequestTarget)
+		fmt.Printf("- Version: %s\n", httpData.RequestLine.HttpVersion)
+
 		con.Close()
 		fmt.Println("Connection closed")
 	}
