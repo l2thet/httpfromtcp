@@ -20,37 +20,41 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 		return 0, false, errors.New("unable to parse headers")
 	}
 	if startsWithCRLF {
-		return len(parts), true, nil
+		return 0, true, nil
 	}
 
-	containsCRLF, err := regexp.MatchString(`\r\n`, parts)
+	crlfIndex := strings.Index(parts, "\r\n")
+	if crlfIndex == -1 {
+		return 0, false, nil // No error, just need more data
+	}
+
+	parts = parts[:crlfIndex]
+
+	validHeaderSplit, err := regexp.MatchString(`[:]`, parts)
 	if err != nil {
 		return 0, false, errors.New("unable to parse headers")
 	}
-	if !containsCRLF {
-		return 0, false, nil
-	}
-
-	validKey, err := regexp.MatchString(`\s*[A-Za-z]*:`, parts)
-	if err != nil {
-		return 0, false, errors.New("unable to parse headers")
-	}
-	if !validKey {
-		return 0, false, errors.New("invalid header key")
+	if !validHeaderSplit {
+		return 0, false, errors.New("invalid header, header does not containt ':'")
 	}
 
 	before, after, found := strings.Cut(parts, ":")
 	if !found {
 		return 0, false, errors.New("invalid header key")
 	}
-	before = strings.TrimSpace(before)
-	after = strings.TrimSpace(after)
-	if before == "" || after == "" {
+
+	trimmedBefore := strings.TrimSpace(before)
+	timmedAfter := strings.TrimSpace(after)
+	if trimmedBefore == "" || timmedAfter == "" {
 		return 0, false, errors.New("invalid header key")
 	}
-	h[before] = after
-	parsedData := before + ": " + after + "\r\n"
-	n = len(parsedData)
 
-	return n, true, nil
+	if len(before) > 0 && before[len(before)-1] == ' ' {
+		return 0, false, errors.New("invalid spacing in header key")
+	}
+
+	h[trimmedBefore] = timmedAfter
+	n = len(parts) + 2 // +2 for CRLF
+
+	return n, false, nil
 }
