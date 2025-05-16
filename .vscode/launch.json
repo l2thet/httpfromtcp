@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/internal/headers",
+            "program": "${workspaceFolder}/internal/request",
         }
     ]
 }

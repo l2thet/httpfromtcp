@@ -43,6 +43,14 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 		return 0, false, errors.New("invalid header key")
 	}
 
+	validKey, err := regexp.MatchString(`^[a-zA-Z0-9\-!#\$%&'\*\+\.\^_`+"`"+`|\~]+$`, before)
+	if err != nil {
+		return 0, false, errors.New("unable to parse headers")
+	}
+	if !validKey {
+		return 0, false, errors.New("invalid header key")
+	}
+
 	trimmedBefore := strings.TrimSpace(before)
 	timmedAfter := strings.TrimSpace(after)
 	if trimmedBefore == "" || timmedAfter == "" {
@@ -53,7 +61,9 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 		return 0, false, errors.New("invalid spacing in header key")
 	}
 
-	h[trimmedBefore] = timmedAfter
+	lowerKey := strings.ToLower(trimmedBefore)
+
+	h[lowerKey] = timmedAfter
 	n = len(parts) + 2 // +2 for CRLF
 
 	return n, false, nil
