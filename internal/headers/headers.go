@@ -63,7 +63,15 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 
 	lowerKey := strings.ToLower(trimmedBefore)
 
-	h[lowerKey] = timmedAfter
+	// Check if the header already exists
+	if existingValue, ok := h[lowerKey]; ok {
+		// If it exists, append the new value to the existing one
+		h[lowerKey] = existingValue + ", " + timmedAfter
+	} else {
+		// If it doesn't exist, create a new entry
+		h[lowerKey] = timmedAfter
+	}
+
 	n = len(parts) + 2 // +2 for CRLF
 
 	return n, false, nil
